@@ -13,7 +13,7 @@ VALUES
 ('Regional Manager',102000,1),
 ('Finance Rep',102000,2),
 ('Quality control Rep',70000,3),
-('Warehouse Rep',45000,8),
+('Warehouse Rep',45000,1),
 ('Sales Rep',68000,9),
 ('Engineering Rep',10000,6),
 ('Marketing Rep',70600,7);
@@ -23,11 +23,11 @@ VALUES
 ('Ryan','John',1),
 ('John','mann',2),
 ('Laurence','Duplessis',7),
-('julia','Deloitte',9),
+('julia','Deloitte',1),
 ('Francine','Oreal',3),
 ('Alex','Johnson',6),
 ('Jacqueline','batt',1);
 
-UPDATE `employee_db`.`employee` 
+UPDATE `employee_db`.`employees` 
 SET `manager_id` ='1'
 WHERE (`id`>'1');
