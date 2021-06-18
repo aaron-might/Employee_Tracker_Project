@@ -177,7 +177,7 @@ const showByManager = () => {
 //chalk.yellow
 
 const addEmployee = () => {
-    const roleQuery = 'SELECT * from roles; SELECT CONCAT (e.first_name," ",e.last_name) AS full_name FROM employees e'
+    const roleQuery = 'SELECT CONCAT (e.first_name," ",e.last_name) AS full_name FROM employees e'
     connection.query(roleQuery, (err, results) => {
         if (err) throw err;
         console.log(' ');
@@ -197,21 +197,19 @@ const addEmployee = () => {
             },
             {
                 name: 'role',
-                type: 'list',
-                choices: function () {
-                    let choiceArray = results[0].map(choice => choice.title);
-                    return choiceArray;
-                },
+                type: 'input',
+                // choices: function () {
+                //     let choiceArray = results.map(choice => choice.title);
+                //     return choiceArray;
                 message: addEmployeeQuestions[2]
-
-            },
+                },
             {
                 name: 'manager',
-                type: 'list',
-                choices: function () {
-                    let choiceArray = results[1].map(choice => choice.full_name);
-                    return choiceArray;
-                },
+                type: 'input',
+                // choices: function () {
+                //     let choiceArray = results[1].map(choice => choice.full_name);
+                //     return choiceArray;
+                // },
                 message: addEmployeeQuestions[3]
 
             }
@@ -366,10 +364,8 @@ const removeRole = () => {
                 (SELECT id FROM departments WHERE department_name = "${answer.dept}"));`
             )
             startApp();
-
         })
     })
-
 }
 const viewDept = () => {
     query = `SELECT department_name AS "Departments" FROM departments`;
