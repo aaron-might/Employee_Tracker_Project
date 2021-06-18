@@ -30,7 +30,7 @@ LEFT JOIN departments d
 ON d.id = r.department_id
 LEFT JOIN employees m ON m.id = e.manager_id
 ORDER BY e.id;`
-const addEmployeeQuestions = ['What is the first name?', 'What is the last name?', 'What is their role?', 'Who is their manager?']
+const removeEmployeeQuestions = ['What is the first name?', 'What is the last name?', 'What is their role?', 'Who is their manager?']
 // const roleQuery = 'SELECT * from roles; SELECT CONCAT (e.first_name," ",e.last_name) AS full_name, r.title, d.department_name FROM employees e INNER JOIN roles r ON r.id = e.role_id INNER JOIN departments d ON d.id = r.department_id WHERE department_name = "Management"'
 
 const mgrQuery = 'SELECT CONCAT (e.first_name," ",e.last_name) AS full_name, r.title, d.department_name FROM employees e INNER JOIN roles r ON r.id = e.role_id INNER JOIN departments d ON d.id = r.department_id WHERE department_name = "Management"'
@@ -187,13 +187,13 @@ const addEmployee = () => {
             {
                 name: 'fName',
                 type: 'input',
-                message: addEmployeeQuestions[0]
+                message: removeEmployeeQuestions[0]
 
             },
             {
                 name: 'lName',
                 type: 'input',
-                message: addEmployeeQuestions[1]
+                message: removeEmployeeQuestions[1]
             },
             {
                 name: 'role',
@@ -201,7 +201,7 @@ const addEmployee = () => {
                 // choices: function () {
                 //     let choiceArray = results.map(choice => choice.title);
                 //     return choiceArray;
-                message: addEmployeeQuestions[2]
+                message: removeEmployeeQuestions[2]
                 },
             {
                 name: 'manager',
@@ -210,7 +210,7 @@ const addEmployee = () => {
                 //     let choiceArray = results[1].map(choice => choice.full_name);
                 //     return choiceArray;
                 // },
-                message: addEmployeeQuestions[3]
+                message: removeEmployeeQuestions[3]
 
             }
         ]).then((answer) => {
@@ -223,24 +223,71 @@ const addEmployee = () => {
         })
     })
  }
- const removeEmployee = () => {
-    connection.query(allEmployeeQuery, (err, results) => {
+const removeEmployee = () => {
+    const roleQuery = 'SELECT CONCAT (e.first_name," ",e.last_name) AS full_name FROM employees e'
+    connection.query(roleQuery, (err, results) => {
         if (err) throw err;
         console.log(' ');
-        console.table(('All Employees'), results)
-        //chalk.yellow
+        console.table(('list of current employees'), results);
+//chalk.yellow
         inquirer.prompt([
             {
-                name: 'IDtoRemove',
+                name: 'fName',
                 type: 'input',
-                message: 'Enter the Employee ID of the person to remove:'
+                message: removeEmployeeQuestions[0]
+
+            },
+            {
+                name: 'lName',
+                type: 'input',
+                message: removeEmployeeQuestions[1]
+            },
+            {
+                name: 'role',
+                type: 'input',
+                // choices: function () {
+                //     let choiceArray = results.map(choice => choice.title);
+                //     return choiceArray;
+                message: removeEmployeeQuestions[2]
+                },
+            {
+                name: 'manager',
+                type: 'input',
+                // choices: function () {
+                //     let choiceArray = results[1].map(choice => choice.full_name);
+                //     return choiceArray;
+                // },
+                message: removeEmployeeQuestions[3]
+
             }
         ]).then((answer) => {
-            connection.query(`DELETE FROM employees WHERE ?`, { id: answer.IDtoRemove })
+            connection.query(
+                `DELETE employees(first_name, last_name, role_id, manager_id) VALUES(?, ?, 
+                (id FROM roles WHERE title = ? ), 
+                (DELETE id FROM (SELECT id FROM employees WHERE CONCAT(first_name," ",last_name) = ? ) AS temptable))`, [answer.fName, answer.lName, answer.role, answer.manager]
+            )
             startApp();
         })
     })
-}
+ }
+//  const removeEmployee = () => {
+//     connection.query(allEmployeeQuery, (err, results) => {
+//         if (err) throw err;
+//         console.log(' ');
+//         console.table(('All Employees'), results)
+//         //chalk.yellow
+//         inquirer.prompt([
+//             {
+//                 name: 'IDtoRemove',
+//                 type: 'input',
+//                 message: 'Enter the Employee ID of the person to remove:'
+//             }
+//         ]).then((answer) => {
+//             connection.query(`DELETE FROM employees WHERE ?`, { id: answer.IDtoRemove })
+//             startApp();
+//         })
+//     })
+// }
 const updateRole = () => {
     const query = `SELECT CONCAT (first_name," ",last_name) AS full_name FROM employees; SELECT title FROM roles`
     connection.query(query, (err, results) => {
