@@ -19,8 +19,7 @@ const connection = mysql.createConnection({
   database: 'employee_db',
 });
 
-//const chalk = require('chalk');
-const startScreen = ['View all Employees', 'View all Employees by Department', 'View all Employees by Manager', 'Add Employee', 'Remove Employee', 'Update Employee Role', 'View all Roles', 'Add Role', 'Remove Role', 'View all Departments', 'Add Department', 'Remove Department', 'Exit']
+const startScreen = ['View all Employees', 'View all Employees by Department', 'View all Employees by Manager', 'Add Employee', 'Remove Employee', 'Update Employee Role','Update Employees by manager', 'View all Roles', 'Add Role', 'Remove Role', 'View all Departments', 'Add Department', 'Remove Department','View Department Total Budget', 'Exit']
 const allEmployeeQuery = `SELECT e.id, e.first_name AS "First Name", e.last_name AS "Last Name", r.title, d.department_name AS "Department", IFNULL(r.salary, 'No Data') AS "Salary", CONCAT(m.first_name," ",m.last_name) AS "Manager"
 FROM employees e
 LEFT JOIN roles r 
@@ -31,8 +30,7 @@ ON d.id = r.department_id
 LEFT JOIN employees m ON m.id = e.manager_id
 ORDER BY e.id;`
 const removeEmployeeQuestions = ['What is the first name?', 'What is the last name?', 'What is their role?', 'Who is their manager?']
-// const roleQuery = 'SELECT * from roles; SELECT CONCAT (e.first_name," ",e.last_name) AS full_name, r.title, d.department_name FROM employees e INNER JOIN roles r ON r.id = e.role_id INNER JOIN departments d ON d.id = r.department_id WHERE department_name = "Management"'
-
+//const byDepQuery = 'SELECT CONCAT (e.first_name," " e.last_name) AS full_name, d.deparment_name FROM employees e '
 const mgrQuery = 'SELECT CONCAT (e.first_name," ",e.last_name) AS full_name, r.title, d.department_name FROM employees e INNER JOIN roles r ON r.id = e.role_id INNER JOIN departments d ON d.id = r.department_id WHERE department_name = "Management"'
 
 
@@ -103,43 +101,35 @@ const showAll = () => {
         startApp();
     })
 
-    //chalk.yellow
 }
+
+
 const showByDept = () => {
-    const deptQuery = 'SELECT * FROM departments';
-    connection.query(deptQuery, (err, results) => {
-
+    const byDepQuery = 'SELECT CONCAT (e.first_name," " e.last_name) AS full_name, d.deparment_name FROM employees e'
+    connection.query(byDepQuery, (err, results) => {
         if (err) throw err;
-
+        
         inquirer.prompt([
             {
-                name: 'deptChoice',
+                name: 'byDep_choice',
                 type: 'list',
                 choices: function () {
-                    let choiceArray = results.map(choice => choice.department_name)
+                    let choiceArray = results.map(choice => choice.full_name);
                     return choiceArray;
                 },
                 message: 'Select a Department to view:'
             }
         ]).then((answer) => {
-            let chosenDept;
-            for (let i = 0; i < results.length; i++) {
-                if (results[i].department_name === answer.deptChoice) {
-                    chosenDept = results[i];
-                }
-            }
-
-            const query = 'SELECT e.id, e.first_name AS "First Name", e.last_name AS "Last Name", r.title AS "Title", d.department_name AS "Department", r.salary AS "Salary" FROM employees e INNER JOIN roles r ON r.id = e.role_id INNER JOIN departments d ON d.id = r.department_id WHERE ?;';
-            connection.query(query, { department_name: chosenDept.department_name }, (err, res) => {
+            const byDepQuery = `SELECT CONCAT (e.first_name," " e.last_name) AS full_name, d.deparment_name FROM employees e`
+            connection.query(byDepQuery, [answer.byDep_choice], (err, results) => {
                 if (err) throw err;
                 console.log(' ');
-                console.table((`All Employees by Department: ${chosenDept.department_name}`), res)
+                console.table(('Employees by deparment'), results);
                 startApp();
             })
         })
     })
 }
-//chalk.yellow
 
 const showByManager = () => {
     connection.query(mgrQuery, (err, results) => {
@@ -174,7 +164,7 @@ const showByManager = () => {
         })
     })
 }
-//chalk.yellow
+
 
 const addEmployee = () => {
     const roleQuery = 'SELECT CONCAT (e.first_name," ",e.last_name) AS full_name FROM employees e'
@@ -182,7 +172,7 @@ const addEmployee = () => {
         if (err) throw err;
         console.log(' ');
         console.table(('list of current employees'), results);
-//chalk.yellow
+
         inquirer.prompt([
             {
                 name: 'fName',
@@ -198,18 +188,13 @@ const addEmployee = () => {
             {
                 name: 'role',
                 type: 'input',
-                // choices: function () {
-                //     let choiceArray = results.map(choice => choice.title);
-                //     return choiceArray;
+           
                 message: removeEmployeeQuestions[2]
                 },
             {
                 name: 'manager',
                 type: 'input',
-                // choices: function () {
-                //     let choiceArray = results[1].map(choice => choice.full_name);
-                //     return choiceArray;
-                // },
+                
                 message: removeEmployeeQuestions[3]
 
             }
@@ -223,71 +208,23 @@ const addEmployee = () => {
         })
     })
  }
-const removeEmployee = () => {
-    const roleQuery = 'SELECT CONCAT (e.first_name," ",e.last_name) AS full_name FROM employees e'
-    connection.query(roleQuery, (err, results) => {
+ const removeEmployee = () => {
+    connection.query(allEmployeeQuery, (err, results) => {
         if (err) throw err;
         console.log(' ');
-        console.table(('list of current employees'), results);
-//chalk.yellow
-        inquirer.prompt([
+        console.table(('All Employees'), results)
+            inquirer.prompt([
             {
-                name: 'fName',
+                name: 'IDtoRemove',
                 type: 'input',
-                message: removeEmployeeQuestions[0]
-
-            },
-            {
-                name: 'lName',
-                type: 'input',
-                message: removeEmployeeQuestions[1]
-            },
-            {
-                name: 'role',
-                type: 'input',
-                // choices: function () {
-                //     let choiceArray = results.map(choice => choice.title);
-                //     return choiceArray;
-                message: removeEmployeeQuestions[2]
-                },
-            {
-                name: 'manager',
-                type: 'input',
-                // choices: function () {
-                //     let choiceArray = results[1].map(choice => choice.full_name);
-                //     return choiceArray;
-                // },
-                message: removeEmployeeQuestions[3]
-
+                message: 'Enter the Employee ID of the person to remove:'
             }
         ]).then((answer) => {
-            connection.query(
-                `DELETE employees(first_name, last_name, role_id, manager_id) VALUES(?, ?, 
-                (id FROM roles WHERE title = ? ), 
-                (DELETE id FROM (SELECT id FROM employees WHERE CONCAT(first_name," ",last_name) = ? ) AS temptable))`, [answer.fName, answer.lName, answer.role, answer.manager]
-            )
+            connection.query(`DELETE FROM employees WHERE ?`, { id: answer.IDtoRemove })
             startApp();
         })
     })
- }
-//  const removeEmployee = () => {
-//     connection.query(allEmployeeQuery, (err, results) => {
-//         if (err) throw err;
-//         console.log(' ');
-//         console.table(('All Employees'), results)
-//         //chalk.yellow
-//         inquirer.prompt([
-//             {
-//                 name: 'IDtoRemove',
-//                 type: 'input',
-//                 message: 'Enter the Employee ID of the person to remove:'
-//             }
-//         ]).then((answer) => {
-//             connection.query(`DELETE FROM employees WHERE ?`, { id: answer.IDtoRemove })
-//             startApp();
-//         })
-//     })
-// }
+}
 const updateRole = () => {
     const query = `SELECT CONCAT (first_name," ",last_name) AS full_name FROM employees; SELECT title FROM roles`
     connection.query(query, (err, results) => {
@@ -320,9 +257,7 @@ const updateRole = () => {
                 })
         })
 
-
     })
-
 }
 
 const viewRoles = () => {
@@ -334,9 +269,7 @@ const viewRoles = () => {
         console.table(('All Roles'), results);
         startApp();
     })
-
 }
-//chalk.yellow
 
 const addRole = () => {
     const addRoleQuery = `SELECT title AS "title" FROM roles;`
@@ -345,7 +278,6 @@ const addRole = () => {
 
         console.log('');
         console.table(('List of current titles:'), results);
-//chalk.yellow
         inquirer.prompt([
             {
                 name: 'newTitle',
@@ -360,9 +292,7 @@ const addRole = () => {
             {
                 name: 'dept',
                 type: 'input',
-               // choices: function () {
-                    // let choiceArray = results.map(choice => choice.department_name);
-                    // return choiceArray;
+               
                     message: 'Select the Department for this new Title:'
                 },
         ]).then((answer) => {
@@ -385,7 +315,6 @@ const removeRole = () => {
 
         console.log('');
         console.table(('List of current titles:'), results);
-//chalk.yellow
         inquirer.prompt([
             {
                 name: 'Title',
@@ -400,9 +329,7 @@ const removeRole = () => {
             {
                 name: 'dept',
                 type: 'input',
-               // choices: function () {
-                    // let choiceArray = results.map(choice => choice.department_name);
-                    // return choiceArray;
+               
                     message: 'Select the Department to remove this Title:'
                 },
         ]).then((answer) => {
@@ -424,7 +351,7 @@ const viewDept = () => {
         startApp();
     })
 }
-//chalk.yellow
+
 const addDept = () => {
     query = `SELECT department_name AS "Departments" FROM departments`;
     connection.query(query, (err, results) => {
@@ -432,7 +359,7 @@ const addDept = () => {
 
         console.log('');
         console.table(('List of current Departments'), results);
-//chalk.yellow
+
         inquirer.prompt([
             {
                 name: 'newDept',
