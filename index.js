@@ -47,7 +47,7 @@ const startApp = () => {
             case 'View all Employees':
                 showAll();
                 break;
-            case 'View all Emplyees by Department':
+            case 'View all Employees by Department':
                 showByDept();
                 break;
             case 'View all Employees by Manager':
@@ -105,26 +105,32 @@ const showAll = () => {
 
 
 const showByDept = () => {
-    const byDepQuery = 'SELECT CONCAT (e.first_name," " e.last_name) AS full_name, d.deparment_name FROM employees e'
+    const byDepQuery = `
+    SELECT * FROM departments `
     connection.query(byDepQuery, (err, results) => {
         if (err) throw err;
         
         inquirer.prompt([
             {
-                name: 'byDep_choice',
+                name: 'department_name',
                 type: 'list',
                 choices: function () {
-                    let choiceArray = results.map(choice => choice.full_name);
+                    let choiceArray = results.map(choice => choice.department_name);
                     return choiceArray;
                 },
                 message: 'Select a Department to view:'
             }
         ]).then((answer) => {
-            const byDepQuery = `SELECT CONCAT (e.first_name," " e.last_name) AS full_name, d.deparment_name FROM employees e`
-            connection.query(byDepQuery, [answer.byDep_choice], (err, results) => {
+            const byDepQuery = `
+            SELECT CONCAT (first_name, " ", last_name) AS full_name, department_name 
+    FROM employees 
+    JOIN roles ON roles.id = employees.role_id
+    JOIN departments  ON departments.id = roles.department_id
+    WHERE ?`
+            connection.query(byDepQuery, answer, (err, results) => {
                 if (err) throw err;
                 console.log(' ');
-                console.table(('Employees by deparment'), results);
+                console.table(('Employees by department'), results);
                 startApp();
             })
         })
